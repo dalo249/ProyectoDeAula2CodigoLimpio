@@ -1,0 +1,124 @@
+//PRUEBAS UNITARIAS
+using Microsoft.VisualStudio.TestPlatform.TestHost;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
+using System;
+using System.IO;
+
+namespace ProyectoDeAulaCodigoLimpioPruebas_Test
+{
+
+    
+
+    [TestClass]
+    public class ProgramTest
+    {
+
+        // Debe cofirmar el registro una nueva idea de negocio de dos formas:
+        // 1) Comprueba consola arroja el mensaje de registro exitoso.
+
+        [TestMethod]
+        public void registrarIdeaNegocio_DebeConfirmarRegistro()
+        {
+            // Arrange
+           
+            string nombre = "Emprendimiento 1";
+            string impacto = "Alto impacto"; 
+            double valorInversion = 10000;
+            double ingresosPrimeros3Anios = 5000;
+            string departamentos = "Antioquia-Cauca";
+            string herramientas4RI = "inteligencia artificial-big data";
+
+            using (var sw = new StringWriter())
+            {
+                Console.SetOut(sw);
+                using (var sr = new StringReader($"{nombre}\n{impacto}\n{departamentos}\n{valorInversion}\n{ingresosPrimeros3Anios}\n{herramientas4RI}\n"))
+                {
+                    Console.SetIn(sr);
+
+                    // Act
+                    Program.RegistrarIdeaNegocio();
+
+                    // Assert
+                    string consolaMuestra = sw.ToString().Trim();
+                    Assert.IsTrue(consolaMuestra.Contains($"Idea de negocio registrada exitosamente."));
+                }
+            }
+          
+        }
+
+     
+
+    }
+
+    [TestClass]
+    public class AnalizadorEstadisticasTest
+    {
+        //Caso base: cuando el analizador ejecute un metodo y la lista total de ideas este vacia:
+        //El metodo retornara una instancia nula.
+        [TestMethod]
+        public void CasoListaVacia_DebeRetornarNullCuandoNoHayIdeas() 
+        {
+            //Arrange
+            AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
+
+            //Act
+            IdeaDeNegocio ideaMayorDeptos = analizador.ideaMayorDepartamentos();
+
+            //Assert
+            Assert.IsNull( ideaMayorDeptos );
+
+        }
+
+        //Debe retornar objeto tipo IdeaDeNegocio con:
+        //idea con mayor numero departamentos del total de ideas.
+        [TestMethod]
+        public void ideaMayorDeptos_DebeRetornarIdeaConMasDeptos()
+        {
+            //Arrange
+            AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
+
+            IdeaDeNegocio idea1 = new IdeaDeNegocio(1);
+            idea1.Departamentos.Add(new Departamento { Codigo = 1, Nombre = "Antioquia" });
+            idea1.Departamentos.Add(new Departamento { Codigo = 2, Nombre = "Caldas" });
+
+            IdeaDeNegocio idea2 = new IdeaDeNegocio(2);
+            idea2.Departamentos.Add(new Departamento { Codigo = 3, Nombre = "Bogota" });
+
+            analizador.ideasDeNegocio.Add(idea1);
+            analizador.ideasDeNegocio.Add(idea2);
+
+            //Act
+            IdeaDeNegocio ideaMayorDeptos = analizador.ideaMayorDepartamentos();
+
+            //Assert
+            Assert.AreEqual(idea1, ideaMayorDeptos);
+        }
+
+        //Debe retornar objeto tipo IdeaDeNegocio con:
+        //idea el valor de total de ingresos mayor.
+        [TestMethod]
+        public void ideaMayorIngresos()
+        {
+            //Arrange
+            AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
+
+            IdeaDeNegocio idea1 = new IdeaDeNegocio(1);
+            idea1.TotalIngresos = 500;
+
+            IdeaDeNegocio idea2 = new IdeaDeNegocio(2);
+            idea2.TotalIngresos = 7000;
+
+            analizador.ideasDeNegocio.Add(idea1);
+            analizador.ideasDeNegocio.Add(idea2);
+
+
+            //Act
+            IdeaDeNegocio ideaMayorIngresos = analizador.ideaMayorTotalIngresos();
+
+            //Assert
+            Assert.AreEqual(idea2 , ideaMayorIngresos);
+            
+
+        }
+    }
+}

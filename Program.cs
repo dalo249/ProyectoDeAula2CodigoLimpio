@@ -41,6 +41,7 @@ class Program
 {
     static List<IdeaDeNegocio> ideasDeNegocio = new List<IdeaDeNegocio>();
 
+
     static void Main()
     {
         int codIdeaDeNegocio = 0;

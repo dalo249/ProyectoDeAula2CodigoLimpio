@@ -1,4 +1,4 @@
-//PRUEBAS UNITARIAS
+--------------------------------------------------PRUEBAS UNITARIAS--------------------------------------------------------
 using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
 using System;
@@ -7,22 +7,20 @@ using System.IO;
 namespace ProyectoDeAulaCodigoLimpioPruebas_Test
 {
 
-    
-
     [TestClass]
     public class ProgramTest
     {
 
         // Debe cofirmar el registro una nueva idea de negocio de dos formas:
         // 1) Comprueba consola arroja el mensaje de registro exitoso.
+        // 2) La nueva idea de negocio se agrego a lista total de ideas.
 
         [TestMethod]
         public void registrarIdeaNegocio_DebeConfirmarRegistro()
         {
             // Arrange
-           
             string nombre = "Emprendimiento 1";
-            string impacto = "Alto impacto"; 
+            string impacto = "Alto impacto";
             double valorInversion = 10000;
             double ingresosPrimeros3Anios = 5000;
             string departamentos = "Antioquia-Cauca";
@@ -41,12 +39,46 @@ namespace ProyectoDeAulaCodigoLimpioPruebas_Test
                     // Assert
                     string consolaMuestra = sw.ToString().Trim();
                     Assert.IsTrue(consolaMuestra.Contains($"Idea de negocio registrada exitosamente."));
+                    Assert.AreEqual(1, Program.ideasDeNegocio.Count);
                 }
             }
-          
         }
 
-     
+        // Debe cofirmar el registro un integrante en idea de dos formas:
+        //1) Comprueba consola arroja el mensaje de registro exitoso.
+        //2) Confirma se agrego el nuevo integrante a la idea de codigo asociado.
+        [TestMethod]
+        public void agregarIntegrante_DebeAgregarIntegranteEnIdea() 
+        {
+            //Arrange
+            IdeaDeNegocio idea1 = new IdeaDeNegocio(1);
+            Program.ideasDeNegocio.Add(idea1);
+
+            int codigoIdea = 1;
+            string id = "225566";
+            string nombre = "Carlos";
+            string apellidos = "Perez Ramirez";
+            string rol = "contador";
+            string email = "carlos@hotmail.com";
+
+            using (var sw = new StringWriter()) 
+            {
+                Console.SetOut(sw);
+                using (var sr = new StringReader($"{codigoIdea}\n{nombre}\n{apellidos}\n{rol}\n{email}")) 
+                {
+                    Console.SetIn(sr);
+
+                    //Act
+                    Program.agregarIntegrante();
+
+                    // Assert
+                    string consolaMuestra = sw.ToString().Trim();
+                    Assert.IsTrue(consolaMuestra.Contains("Integrante agregado exitosamente."));
+                    Assert.AreEqual(1, idea1.Integrantes.Count);
+                }
+            }
+
+        }
 
     }
 
@@ -56,7 +88,7 @@ namespace ProyectoDeAulaCodigoLimpioPruebas_Test
         //Caso base: cuando el analizador ejecute un metodo y la lista total de ideas este vacia:
         //El metodo retornara una instancia nula.
         [TestMethod]
-        public void CasoListaVacia_DebeRetornarNullCuandoNoHayIdeas() 
+        public void CasoBaseListaVacia_DebeRetornarNullCuandoNoHayIdeas()
         {
             //Arrange
             AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
@@ -65,8 +97,7 @@ namespace ProyectoDeAulaCodigoLimpioPruebas_Test
             IdeaDeNegocio ideaMayorDeptos = analizador.ideaMayorDepartamentos();
 
             //Assert
-            Assert.IsNull( ideaMayorDeptos );
-
+            Assert.IsNull(ideaMayorDeptos);
         }
 
         //Debe retornar objeto tipo IdeaDeNegocio con:
@@ -97,7 +128,7 @@ namespace ProyectoDeAulaCodigoLimpioPruebas_Test
         //Debe retornar objeto tipo IdeaDeNegocio con:
         //idea el valor de total de ingresos mayor.
         [TestMethod]
-        public void ideaMayorIngresos()
+        public void ideaMayorIngresos_DebeRetornarIdeaMayorNumeroIngresos()
         {
             //Arrange
             AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
@@ -116,9 +147,192 @@ namespace ProyectoDeAulaCodigoLimpioPruebas_Test
             IdeaDeNegocio ideaMayorIngresos = analizador.ideaMayorTotalIngresos();
 
             //Assert
-            Assert.AreEqual(idea2 , ideaMayorIngresos);
+            Assert.AreEqual(idea2, ideaMayorIngresos);
+        }
+
+        //cofirma la longitud de la lista de 3 objetos tipo IdeaDeNegocio con:
+        //ideas de negocio de la lista total de ideas con mayor ingresos.
+        [TestMethod]
+        public void ideasMayorRentabilidad_DebeRetornarLista3Ideas()
+        {
+            //Arrange
+            AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
+
+            IdeaDeNegocio idea1 = new IdeaDeNegocio(1);
+            idea1.TotalIngresos = 500;
+
+            IdeaDeNegocio idea2 = new IdeaDeNegocio(2);
+            idea2.TotalIngresos = 100;
+
+            IdeaDeNegocio idea3 = new IdeaDeNegocio(3);
+            idea3.TotalIngresos = 100;
+
+            IdeaDeNegocio idea4 = new IdeaDeNegocio(4);
+            idea4.TotalIngresos = 700;
+
+            analizador.ideasDeNegocio.Add(idea1);
+            analizador.ideasDeNegocio.Add(idea2);
+            analizador.ideasDeNegocio.Add(idea3);
+            analizador.ideasDeNegocio.Add(idea4);
+
+            //Act
+            List<IdeaDeNegocio> ideasMayores3 = analizador.ideasMayorRentabilidad();
+
+            //Assert
+            Assert.AreEqual(3, ideasMayores3.Count);
+        }
+
+        //1.Cofirma Longitud de lista con ideas unicamente que tienen +3 departamentos.
+        //2. Evalua posicion correcta de elementos de la lista resultante.
+        [TestMethod]
+        public void ideasMas3Departamentos_DebeRetornarListaIdeasCumplen()
+        {
+            //Arrange
+            AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
+
+            Departamento antioquia = new Departamento { Codigo = 1, Nombre = "Antioquia" };
+            Departamento caldas = new Departamento { Codigo = 2, Nombre = "Caldas" };
+            Departamento risaralda = new Departamento { Codigo = 3, Nombre = "Risaralda" };
+            Departamento arauca = new Departamento { Codigo = 4, Nombre = "Arauca" };
+
+            IdeaDeNegocio idea1 = new IdeaDeNegocio(1);
+            idea1.Departamentos.Add(antioquia);
+            idea1.Departamentos.Add(risaralda);
+            idea1.Departamentos.Add(caldas);
+
+
+            IdeaDeNegocio idea2 = new IdeaDeNegocio(2);
+            idea2.Departamentos.Add(arauca);
+            idea2.Departamentos.Add(antioquia);
+
+            IdeaDeNegocio idea3 = new IdeaDeNegocio(3);
+            idea3.Departamentos.Add(antioquia);
+            idea3.Departamentos.Add(risaralda);
+            idea3.Departamentos.Add(caldas);
+            idea3.Departamentos.Add(arauca);
+
+            IdeaDeNegocio idea4 = new IdeaDeNegocio(4);
+
+
+            analizador.ideasDeNegocio.Add(idea1);
+            analizador.ideasDeNegocio.Add(idea2);
+            analizador.ideasDeNegocio.Add(idea3);
+            analizador.ideasDeNegocio.Add(idea4);
+
+            //Act
+            List<IdeaDeNegocio> ideasMas3Departamentos = analizador.ideasMas3Departamentos();
+
+            //Assert
+            Assert.AreEqual(1, ideasMas3Departamentos.Count);
+            Assert.AreEqual(idea3, ideasMas3Departamentos[0]);
+
+        }
+
+        //Debe sumar los ingresos del total de ideas registradas.
+        [TestMethod]
+        public void sumarTotalIngresosIdeas_DebeSumarAtributosIngresos()
+        {
+            //Arrange
+            AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
+
+            IdeaDeNegocio idea1 = new IdeaDeNegocio(1);
+            idea1.TotalIngresos = 5000000;
+
+            IdeaDeNegocio idea2 = new IdeaDeNegocio(2);
+            idea2.TotalIngresos = 1370000;
+
+            analizador.ideasDeNegocio.Add(idea1);
+            analizador.ideasDeNegocio.Add(idea2);
+
+            //Act
+            double totalIngresos = analizador.SumarTotalIngresosIdeas();
+
+            //Assert
+            Assert.AreEqual((idea1.TotalIngresos + idea2.TotalIngresos), totalIngresos);
+
+        }
+
+
+        //Debe sumar las inversiones del total de ideas registradas.
+        [TestMethod]
+        public void sumarTotalInversionIdeas_DebeSumarAtributosInversion()
+        {
+            //Arrange
+            AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
+
+            IdeaDeNegocio idea1 = new IdeaDeNegocio(1);
+            idea1.ValorInversion = 129000;
+
+            IdeaDeNegocio idea2 = new IdeaDeNegocio(2);
+            idea2.ValorInversion = 890022;
+
+            analizador.ideasDeNegocio.Add(idea1);
+            analizador.ideasDeNegocio.Add(idea2);
+
+            //Act
+            double totalInversiones = analizador.SumarTotalInversionIdeas();
+
+            //Assert
+            Assert.AreEqual((idea1.ValorInversion + idea2.ValorInversion), totalInversiones);
+        }
+
+        //Debe comprobar que del total de ideas registradas encuentre:
+        //intancia Idea con mayor herramientas4RI.
+        [TestMethod]
+        public void ideaMayorHerramientas4RI_DebeRetornarIdeaMas4RI() 
+        {
+            //Arrange
+            AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
+
+            IdeaDeNegocio idea1 = new IdeaDeNegocio(1);
+            idea1.Herramientas4RI.Add("inteligencia artificia");
+            idea1.Herramientas4RI.Add("internet de las cosas");
+            idea1.Herramientas4RI.Add("big data");
+
+            IdeaDeNegocio idea2 = new IdeaDeNegocio(2);
+            idea2.Herramientas4RI.Add("drones");
+            idea2.Herramientas4RI.Add("ciberseguridad");
+
+            analizador.ideasDeNegocio.Add(idea1);
+            analizador.ideasDeNegocio.Add(idea2);
+
+            //Act
+            IdeaDeNegocio ideaMasHerramientas =  analizador.ideaMayorHerramientas4RI();
+
+            //Assert
+            Assert.AreEqual(idea1, ideaMasHerramientas);
+
+        }
+
+        //Debe comprobar retorna un entero = contar ideas usa IA.
+        [TestMethod]
+        public void ideasUsanIA_DebeContarTotalIdeasUsenIA() 
+        {
+            //Arrange
+            AnalizadorEstadisticas analizador = new AnalizadorEstadisticas();
+
+            IdeaDeNegocio idea1 = new IdeaDeNegocio(1);
+            idea1.Herramientas4RI.Add("inteligencia artificial");
             
 
+            IdeaDeNegocio idea2 = new IdeaDeNegocio(2);
+            idea2.Herramientas4RI.Add("drones");
+            idea2.Herramientas4RI.Add("ciberseguridad");
+
+            IdeaDeNegocio idea3 = new IdeaDeNegocio(3);
+            idea3.Herramientas4RI.Add("big data");
+            idea3.Herramientas4RI.Add("inteligencia artificial");
+            
+            analizador.ideasDeNegocio.Add(idea1);
+            analizador.ideasDeNegocio.Add(idea2);
+            analizador.ideasDeNegocio.Add(idea3);
+
+            //Act
+            int TotalideasIA = analizador.ideasUsanIA();
+
+            //Assert
+            Assert.AreEqual(2, TotalideasIA);
         }
     }
 }
+
